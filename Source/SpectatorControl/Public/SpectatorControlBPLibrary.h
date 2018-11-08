@@ -22,4 +22,7 @@ public:
 	UFUNCTION(BlueprintPure)
 		static const FVector2D OffsetCursorWidgetFromMouseLocationForMiddlePivot(const FVector2D AbsoluteCursorLocation, const FVector2D TargetResolution = FVector2D(1920.f, 1080.f));
 
+	UFUNCTION(BlueprintPure)
+		static const FVector2D GetSpectatorDisplayResolution();
+
 };

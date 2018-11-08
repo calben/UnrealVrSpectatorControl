@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 using UnrealBuildTool;
+using System.IO;
 
 public class SpectatorControl : ModuleRules
 {
@@ -12,8 +13,12 @@ public class SpectatorControl : ModuleRules
 
         PrivateDependencyModuleNames.AddRange(new string[] { });
 
-        // Uncomment if you are using Slate UI
-        // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
+        PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
+
+        if (Target.Type == TargetRules.TargetType.Editor)
+        {
+            PrivateDependencyModuleNames.AddRange(new string[] { "UnrealEd" });
+        }
 
         // Uncomment if you are using online features
         // PrivateDependencyModuleNames.Add("OnlineSubsystem");
