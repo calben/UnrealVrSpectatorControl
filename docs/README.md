@@ -4,7 +4,7 @@ Asymmetrical virtual reality applications and games often include a participant 
 In Unreal Engine it's possible to make this, but it involves a little more work than you'd initially anticipate.
 This project includes a sample of a virtual reality application in which one user can look at an environment in virtual reality and another can use a virtual cursor to interact with the game through a UMG widget on a spectator screen.
 
-# Tutorial
+# Setup Explanation
 
 ## Player Pawn Setup
 
@@ -13,6 +13,13 @@ This project includes a sample of a virtual reality application in which one use
    In the sample project, this component was added as a child to the camera for debugging purposes, but you will probably want to attach it directly to the root and position the widget so that it is facing outward and thus invisible.
    While the `UWidgetComponent` doesn't necessarily need to be on the player pawn, I found it a reasonable, organized place to put it.
    If you feel your player pawn is already crowded with too much functionality, then put the `UWidgetComponent` on a unique actor in the world that can be easily found and referenced.
+
+1. Set up the the user interface settings of the widget component.
+   The first thing we will do is set the draw size of the component to be 1920x1080 or to whatever your target draw size is.
+   If your spectator is using a higher screen resolution, this means they'll get a lower quality widget component, so you may want to adjust this by getting the screen resolution of the spectator display.
+   If you don't use 1920x1080, make sure when you make the calls to the `GetAbsoluteLocationForCursorWidgetFromMousePosition` and other functions in the library that you adjust the widget resolution accordingly, as these functions will default to 1920x1080.
+
+   ![widget component user interface settings](_media/widget_component_user_interface_settings.png)
 
 1. Add a `UWidgetInteractionComponent` as a child of the previously add `UWidgetComponent`.
    This component *must* be a child as its position will be set relative to its parent component.
@@ -28,19 +35,81 @@ This project includes a sample of a virtual reality application in which one use
 
 1. Create a widget blueprint or a `UUserWidget`.
 
-1. Add a `UImage` behaving as a virtual cursor as the very last widget in the widget blueprint so that it shows on top of all other items. 
+1. Add a `UImage` behaving as a virtual cursor as the very last widget in the widget blueprint so that it shows on top of all other items and is a child of the root canvas. 
    Under the Behavior panel, set the visibility to "hit test invisible."
    We need to do this because the widget interaction component will be tracing onto the widget directly on the center of this widget.
    If the widget were visible to hit tests, then the widget interaction would only ever hit this widget and thus not be able to interact with the underlying UI elements.
-   ![logo](_media/hit_test_invisible.png)
 
-## Render Target Setup
+   ![hit test invisible image](_media/hit_test_invisible.png)
 
-1. A render target that renders out the real scene and displays it on the UI through a user interface material.
+1. For convenience, create a function to set the cursor widget's position.
+   Since we parented the cursor to the top canvas of our widget, its widget slot is a `CanvasPanelSlot`.
+   Get the widget's slot, cast it, and set the position using `CanvasPanelSlot::SetPosition(FVector2D InPosition)`.
+   For minorly improved performance, you may also keep a reference to the already cast slot.
+
+1. In the `UWidgetComponent` that will be used to render the spectator screen, set up the user widget to be a reference to the widget blueprint we just created.
 
 ## Switching Spectator Modes
 
-1. A behaviour such that when the `P` key is pressed when running in virtual reality the spectator mode is switched to (and from) texture and the texture is set to the render target of the widget component.
+This optionally sets up a behaviour to switch between watching the VR perspective and using a control interface.
+Alternatively, you can just set the spectator texture and spectator mode at begin play and leave it there.
+If you take this route, I recommend doing so in the player pawn's begin play to ensure everything necessary for the behaviour has been initialised.
+
+1. Add a `bIsShowingTexture` boolean to your actor holding the widget component.
+
+1. Add a function that responds to player input such that if `bIsShowingTexture` is true the spectator screen mode is set to some VR view mode and `bIsShowingTexture` is set to false.
+   If `bIsShowingTexture` is false, set the spectator screen mode to texture and set the texture to be the render target of your widget.
+
+This is demonstrated in Blueprints in the below frame and in CPP underneath that.
+
+<iframe src="https://blueprintue.com/render/hzemqrkt" scrolling="no" width=100% height=400px></iframe>
+
+```cpp
+if(bIsShowingTexture)
+{
+	UHeadMountedDisplayFunctionLibrary::SetSpectatorScreenMode(ESpectatorScreenMode::Undistorted);
+	bIsShowingTexture = false;
+else
+{
+	if (Widget != nullptr && WidgetRenderComponent != nullptr)
+	{
+		UHeadMountedDisplayFunctionLibrary::SetSpectatorScreenMode(ESpectatorScreenMode::Texture);
+		UHeadMountedDisplayFunctionLibrary::SetSpectatorScreenTexture((UTexture*)WidgetRenderComponent->GetRenderTarget());
+		bIsShowingTexture = true;
+	}
+}
+```
+
+## Render Target Setup
+
+You can optionally add a render target that shows what the VR user is seeing or a free spectator camera on your widget.
+We'll use a user interface material to bypass any gamma issues.
+
+1. Add a `USceneCapture2D` to your player pawn or to your scene.
+
+1. Create a `UTextureRenderTarget2D` as an asset.
+   You may also make this dynamically, but it's a lot easier to go ahead and have a single render target asset for each of your scene captures!
+
+   ![create render target](_media/create_render_target.png)
+
+1. Set the texture render target's size x and y to be 1920x1080.
+
+1. Set the render target reference for the scene capture to the render target asset.
+   This may be found under "Scene Capture" settings.
+
+1. Also under "Scene Capture" settings, set the capture source to be SceneColor(HDR) in RGB, 0 in alpha.
+
+1. Create a new material for presenting this texture in the UI.
+
+   1. Set the material domain for your new material to "User Interface."
+
+   1. Set the blend mode to opaque.
+
+   1. Add a texture sample and set the texture to our recently created texture render target.
+
+   1. Set the final color to be the output of our texture sample.
+
+1. Add a `UImage` widget in your widget blueprint and set its material to the material you just created.
 
 # Code Reference
 
