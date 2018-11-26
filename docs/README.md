@@ -4,6 +4,9 @@ Asymmetrical virtual reality applications and games often include a participant 
 In Unreal Engine it's possible to make this, but it involves a little more work than you'd initially anticipate.
 This project includes a sample of a virtual reality application in which one user can look at an environment in virtual reality and another can use a virtual cursor to interact with the game through a UMG widget on a spectator screen.
 
+To view the sample project, go to the Github link through the top right corner.
+If you have any further questions or want to contribute to the project, please open up an issue or email me (my email is public on Github).
+
 # Setup Explanation
 
 ## Player Pawn Setup
