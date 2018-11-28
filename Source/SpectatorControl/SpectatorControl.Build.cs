@@ -9,16 +9,11 @@ public class SpectatorControl : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay" });
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "VRSpectatorUtilities" });
 
         PrivateDependencyModuleNames.AddRange(new string[] { });
 
         PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
-
-        if (Target.Type == TargetRules.TargetType.Editor)
-        {
-            PrivateDependencyModuleNames.AddRange(new string[] { "UnrealEd" });
-        }
 
         // Uncomment if you are using online features
         // PrivateDependencyModuleNames.Add("OnlineSubsystem");

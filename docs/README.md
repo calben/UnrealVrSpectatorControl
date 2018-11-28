@@ -22,6 +22,21 @@ Either way to choose to integrate the C++, you'll need to add the `HeadMountedDi
 This allows you to link functions in the head mounted display library in your module.
 After adding it the public dependency modules line should look like this:
 
+### Git Submodule (recommended)
+
+1. In the root of your project, run the below git submodule add command.
+   Alternatively, you may clone the repository directly into your plugins directory.
+
+```sh
+git submodule add \
+https://github.com/calben/UnrealVRSpectatorUtilitiesPlugin/ \
+Plugins/VRSpectatorUtilities
+```
+
+1. 
+
+### Copy To Existing Library
+
 ```csharp
 PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay" });
 ```

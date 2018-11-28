@@ -1,0 +1,3 @@
+[submodule "Plugins/VRSpectatorUtilities"]
+	path = Plugins/VRSpectatorUtilities
+	url = https://github.com/calben/UnrealVRSpectatorUtilitiesPlugin/
