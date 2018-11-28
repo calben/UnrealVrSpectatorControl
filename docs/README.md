@@ -21,9 +21,7 @@ In the meantime, you need to add these library functions to your project's C++ b
    Alternatively, you may clone the repository directly into your plugins directory or download the zip file and unzip it into your plugins directory.
 
 ```sh
-git submodule add \
-https://github.com/calben/UnrealVRSpectatorUtilitiesPlugin/ \
-Plugins/VRSpectatorUtilities
+git submodule add https://github.com/calben/UnrealVRSpectatorUtilitiesPlugin/ Plugins/VRSpectatorUtilities
 ```
 
 1. In your project's `.Build.cs` file, add `VRSpectatorUtilities` to the public dependency module names such that your range looks something like this:
