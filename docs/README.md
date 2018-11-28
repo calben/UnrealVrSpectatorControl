@@ -9,6 +9,124 @@ If you have any further questions or want to contribute to the project, please o
 
 # Setup Explanation
 
+## Code Setup
+
+The code in the sample project is not provided as a plugin since it is only 3 functions.
+If the functionality expands on request, then I'll implement the code as a separate module.
+In the meantime, you need to add these library functions to your project's C++ by hand.
+
+You can either follow the instructions below or copy paste the Public and Private folders of the sample project into your own project.
+If you take the copy paste the source route, make sure to change the string `SPECTATORCONTROL_API` to `{{ PROJECTNAME }}_API` so that it is correctly in your own module.
+
+Either way to choose to integrate the C++, you'll need to add the `HeadMountedDisplay` to your public dependency module names in your `{{ ProjectName }}.build.cs`.
+This allows you to link functions in the head mounted display library in your module.
+After adding it the public dependency modules line should look like this:
+
+```csharp
+PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay" });
+```
+
+1. Create a new `UBlueprintFunctionLibrary` in your project called `SpectatorControlBPLibrary`.
+   Alternatively, use a blueprint library already in your project.
+   All of my projects have a `{{ ProjectName }}BPLibrary` in them, so if it were me I'd put these functions in there.
+   
+1. Copy the below into the header of the blueprint library.
+```cpp
+/**
+* Calculates the expected cursor position from a viewport of some size to a widget of some size.
+*
+* @param PlayerController The player controller reference from which to get the mouse position.
+* @param WidgetSize The size of the widget for which the cursor position should be calculated.
+* @return Returns the "absolute" location for the widget as a FVector2D offset from the widget origin of 0,0 (top left corner).
+*/
+UFUNCTION(BlueprintPure)
+	static const FVector2D GetAbsoluteLocationForCursorWidgetFromMousePosition(class APlayerController* PlayerController, const FVector2D WidgetSize = FVector2D(1920.f, 1080.f));
+
+/**
+* Retargets a cursor's absolute position to a 3D widget given that in order for widget interaction to work correctly, the widget component should have a pivot of (0.5, 0.5).
+*
+* @param AbsoluteCursorLocation The position of the cursor as an offset from the widget origin.
+* @param TargetResolution The target resolution of the widget.
+* @return The cursor location corrected for the pivot offset.
+*/
+UFUNCTION(BlueprintPure)
+	static const FVector2D OffsetCursorWidgetFromMouseLocationForMiddlePivot(const FVector2D AbsoluteCursorLocation, const FVector2D TargetResolution = FVector2D(1920.f, 1080.f));
+
+/**
+* Gets the spectator display resolution for both in editor and in game
+*
+* @return The display resolution.
+*/
+UFUNCTION(BlueprintPure)
+static const FVector2D GetSpectatorDisplayResolution();
+```
+
+1. Copy the below into the `.cpp` file associated with your Blueprint Library.
+   Unless you called your function library `USpectatorControlBPLibrary`, you'll need to change wherever you see `USpectatorControlBPLibrary` to match the name of your class.
+
+```cpp
+#if WITH_EDITOR
+#include "Editor/UnrealEd/Classes/Editor/EditorEngine.h"
+#endif
+
+#include "Runtime/HeadMountedDisplay/Public/HeadMountedDisplayFunctionLibrary.h"
+#include "Runtime/Engine/Classes/GameFramework/PlayerController.h"
+#include "Runtime/Engine/Public/Slate/SceneViewport.h"
+#include "Runtime/Engine/Classes/Engine/GameEngine.h"
+
+const FVector2D USpectatorControlBPLibrary::GetAbsoluteLocationForCursorWidgetFromMousePosition(APlayerController* PlayerController, const FVector2D WidgetSize)
+{
+	float mouse_x;
+	float mouse_y;
+	PlayerController->GetMousePosition(mouse_x, mouse_y);
+	const FVector2D DisplaySize = GetSpectatorDisplayResolution();
+	FVector2D MousePositionPercentage = FVector2D(mouse_x / DisplaySize.X, mouse_y / DisplaySize.Y);
+	return MousePositionPercentage * WidgetSize;
+}
+
+const FVector2D USpectatorControlBPLibrary::OffsetCursorWidgetFromMouseLocationForMiddlePivot(const FVector2D AbsoluteCursorLocation, const FVector2D TargetResolution)
+{
+	FVector2D Result = TargetResolution / 2.f - AbsoluteCursorLocation;
+	return Result;
+}
+
+const FVector2D USpectatorControlBPLibrary::GetSpectatorDisplayResolution()
+{
+	FSceneViewport* sceneViewport = nullptr;
+
+	if (!GIsEditor)
+	{
+		UGameEngine* GameEngine = Cast<UGameEngine>(GEngine);
+		sceneViewport = GameEngine->SceneViewport.Get();
+	}
+#if WITH_EDITOR
+	else
+	{
+		UEditorEngine* EditorEngine = CastChecked<UEditorEngine>(GEngine);
+		FSceneViewport* PIEViewport = (FSceneViewport*)EditorEngine->GetPIEViewport();
+		if (PIEViewport != nullptr && PIEViewport->IsStereoRenderingAllowed())
+		{
+			sceneViewport = PIEViewport;
+		}
+		else
+		{
+			FSceneViewport* EditorViewport = (FSceneViewport*)EditorEngine->GetActiveViewport();
+			if (EditorViewport != nullptr && EditorViewport->IsStereoRenderingAllowed())
+			{
+				sceneViewport = EditorViewport;
+			}
+		}
+	}
+#endif
+	if (sceneViewport != nullptr)
+	{
+		return sceneViewport->FindWindow()->GetSizeInScreen();
+	}
+
+	return FVector2D();
+}
+```
+
 ## Player Pawn Setup
 
 1. Add a `UWidgetComponent` to your player pawn.
