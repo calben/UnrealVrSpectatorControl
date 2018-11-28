@@ -31,6 +31,7 @@ PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engi
    All of my projects have a `{{ ProjectName }}BPLibrary` in them, so if it were me I'd put these functions in there.
    
 1. Copy the below into the header of the blueprint library.
+
 ```cpp
 /**
 * Calculates the expected cursor position from a viewport of some size to a widget of some size.
