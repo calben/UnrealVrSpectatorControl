@@ -15,17 +15,10 @@ The code in the sample project is not provided as a plugin since it is only 3 fu
 If the functionality expands on request, then I'll implement the code as a separate module.
 In the meantime, you need to add these library functions to your project's C++ by hand.
 
-You can either follow the instructions below or copy paste the Public and Private folders of the sample project into your own project.
-If you take the copy paste the source route, make sure to change the string `SPECTATORCONTROL_API` to `{{ PROJECTNAME }}_API` so that it is correctly in your own module.
-
-Either way to choose to integrate the C++, you'll need to add the `HeadMountedDisplay` to your public dependency module names in your `{{ ProjectName }}.build.cs`.
-This allows you to link functions in the head mounted display library in your module.
-After adding it the public dependency modules line should look like this:
-
 ### Git Submodule (recommended)
 
 1. In the root of your project, run the below git submodule add command.
-   Alternatively, you may clone the repository directly into your plugins directory.
+   Alternatively, you may clone the repository directly into your plugins directory or download the zip file and unzip it into your plugins directory.
 
 ```sh
 git submodule add \
@@ -33,12 +26,27 @@ https://github.com/calben/UnrealVRSpectatorUtilitiesPlugin/ \
 Plugins/VRSpectatorUtilities
 ```
 
-1. 
+1. In your project's `.Build.cs` file, add `VRSpectatorUtilities` to the public dependency module names such that your range looks something like this:
+
+```csharp
+PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "VRSpectatorUtilities" });
+```
 
 ### Copy To Existing Library
 
+1. Add the `HeadMountedDisplay` to your public dependency module names in your `{{ ProjectName }}.build.cs` such that it looks something like the below.
+
 ```csharp
 PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay" });
+```
+
+1. Add the following to the bottom of your module rules constructor.
+
+```csharp
+if (Target.Type == TargetRules.TargetType.Editor)
+{
+    PrivateDependencyModuleNames.AddRange(new string[] { "UnrealEd" });
+}
 ```
 
 1. Create a new `UBlueprintFunctionLibrary` in your project called `SpectatorControlBPLibrary`.
